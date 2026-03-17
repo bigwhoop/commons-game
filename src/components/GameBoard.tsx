@@ -404,7 +404,7 @@ function StockCards({ stock, initialStock }: { stock: number; initialStock: numb
       {Array.from({ length: stock }, (_, i) => (
         <img
           key={i}
-          src="/resource.png"
+          src="resource.png"
           alt=""
           className={`${cardClass} h-auto object-contain opacity-90`}
         />

@@ -38,7 +38,7 @@ export default function Setup({ onStart, savedConfig, onClear }: Props) {
         <div className="bg-[#1C1F24] rounded-2xl p-6 mb-4 border border-[#2E3338]">
           <h2 className="text-xs font-bold text-[#7A8290] uppercase tracking-widest mb-4">Shared Resource</h2>
           <div className="flex gap-4 items-start mb-4">
-            <img src="/resource.png" alt="resource" className="w-14 h-14 object-contain shrink-0 opacity-90 mt-5" />
+            <img src="resource.png" alt="resource" className="w-14 h-14 object-contain shrink-0 opacity-90 mt-5" />
             <div className="flex-1 grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-[#7A8290] mb-1 uppercase tracking-wide">Singular</label>
@@ -82,7 +82,7 @@ export default function Setup({ onStart, savedConfig, onClear }: Props) {
           <div className="space-y-3">
             {players.map((p, i) => (
               <div key={i} className="flex gap-3 items-center">
-                <img src="/resource-user.png" alt="" className="w-10 h-10 object-contain shrink-0 opacity-80" />
+                <img src="resource-user.png" alt="" className="w-10 h-10 object-contain shrink-0 opacity-80" />
                 <input
                   className="flex-1 border border-[#2E3338] bg-[#252830] rounded-xl px-3 py-2 text-[#E0DDD0] placeholder-[#3D4350] focus:outline-none focus:border-[#7A8290] transition-colors"
                   placeholder={`Player ${i + 1} label…`}
