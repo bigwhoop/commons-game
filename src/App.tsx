@@ -9,6 +9,7 @@ const SETUP_KEY = 'cc-pp-setup'
 const DEFAULT_OPTIONS: GameOptions = {
   showResourceFlow: false,
   showHistory: false,
+  logisticGrowth: false,
 }
 
 function loadFromStorage<T>(key: string): T | null {
@@ -88,8 +89,10 @@ export default function App() {
 
       const totalTaken = actualTakes.reduce((s, v) => s + v, 0)
       const remaining = stockBefore - totalTaken
-      const replenished = Math.floor(remaining * 0.5)
-      const newStock = remaining + replenished
+      const replenished = prev.options.logisticGrowth
+        ? Math.round(remaining * (1 - remaining / prev.initialStock))
+        : Math.floor(remaining * 0.5)
+      const newStock = Math.max(0, remaining + replenished)
 
       const roundResult = {
         round: prev.round,
@@ -125,6 +128,10 @@ export default function App() {
     setGameState(prev => prev ? { ...prev, options: { ...prev.options, [key]: !prev.options[key] } } : prev)
   }
 
+  function actOfGod() {
+    setGameState(prev => prev ? { ...prev, stock: Math.floor(prev.stock / 2) } : prev)
+  }
+
   function resetGame() {
     setGameState(null)
   }
@@ -147,6 +154,7 @@ export default function App() {
       onToggleCommunication={toggleCommunication}
       onToggleOption={toggleOption}
       onReset={resetGame}
+      onActOfGod={actOfGod}
     />
   )
 }

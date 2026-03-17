@@ -19,6 +19,7 @@ export interface RoundResult {
 export interface GameOptions {
   showResourceFlow: boolean
   showHistory: boolean
+  logisticGrowth: boolean
 }
 
 export interface GameState {

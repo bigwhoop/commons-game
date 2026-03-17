@@ -7,6 +7,7 @@ interface Props {
   onToggleCommunication: () => void
   onToggleOption: (key: keyof GameOptions) => void
   onReset: () => void
+  onActOfGod: () => void
 }
 
 interface Color {
@@ -34,9 +35,10 @@ const GRID_COLS: Record<number, string> = {
 
 type View = 'input' | 'results' | 'final'
 
-export default function GameBoard({ gameState, onProcessRound, onToggleCommunication, onToggleOption, onReset }: Props) {
+export default function GameBoard({ gameState, onProcessRound, onToggleCommunication, onToggleOption, onReset, onActOfGod }: Props) {
   const [view, setView] = useState<View>('input')
   const [choices, setChoices] = useState<Array<number | null>>(() => gameState.players.map(() => null))
+  const [actOfGodStock, setActOfGodStock] = useState<number | null>(null)
 
   const { resourceName, resourceNamePlural, stock, round, players, history, lastRound, communicationAllowed, initialStock, options } = gameState
 
@@ -55,7 +57,14 @@ export default function GameBoard({ gameState, onProcessRound, onToggleCommunica
 
   function handleNextRound() {
     setChoices(gameState.players.map(() => null))
+    setActOfGodStock(null)
     setView('input')
+  }
+
+  function handleActOfGod(currentStock: number) {
+    const halved = Math.floor(currentStock / 2)
+    setActOfGodStock(halved)
+    onActOfGod()
   }
 
   // ── FINAL SCOREBOARD ────────────────────────────────────────────────────────
@@ -120,8 +129,25 @@ export default function GameBoard({ gameState, onProcessRound, onToggleCommunica
                 <FlowBox label="Before" value={r.stockBefore} />
                 <FlowArrow label={`−${r.totalTaken} taken`} red />
                 <FlowBox label="Remaining" value={r.remaining} />
-                <FlowArrow label={`+${r.replenished} added`} />
-                <FlowBox label="New stock" value={r.newStock} green />
+                <FlowArrow
+                  label={r.replenished >= 0 ? `+${r.replenished} added` : `${r.replenished} decay`}
+                  red={r.replenished < 0}
+                />
+                <FlowBox label="New stock" value={r.newStock} green={actOfGodStock === null} />
+                {actOfGodStock === null
+                  ? (
+                    <button
+                      onClick={() => handleActOfGod(r.newStock)}
+                      className="shrink-0 px-4 py-3 rounded-xl border bg-red-950 border-red-800 text-red-400 font-bold text-sm hover:bg-red-900 transition-colors"
+                    >⚡</button>
+                  )
+                  : (
+                    <>
+                      <FlowArrow label="⚡ ÷ 2" red />
+                      <FlowBox label="New stock" value={actOfGodStock} red />
+                    </>
+                  )
+                }
               </div>
             </div>
           )}
@@ -222,6 +248,11 @@ export default function GameBoard({ gameState, onProcessRound, onToggleCommunica
               onChange={() => onToggleOption('showHistory')}
             />
             <MiniToggle
+              label="Carrying Cap"
+              checked={options.logisticGrowth}
+              onChange={() => onToggleOption('logisticGrowth')}
+            />
+            <MiniToggle
               label="Comm"
               checked={communicationAllowed}
               onChange={onToggleCommunication}
@@ -242,11 +273,24 @@ export default function GameBoard({ gameState, onProcessRound, onToggleCommunica
           stockLow    ? 'bg-amber-950 border-amber-700' :
                         'bg-[#1C1F24] border-[#2E3338]'
         }`}>
-          <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${
-            stock === 0 ? 'text-red-400' : stockLow ? 'text-amber-400' : 'text-[#7A8290]'
-          }`}>
-            {stock === 1 ? resourceName : resourceNamePlural}
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className={`text-xs font-bold uppercase tracking-widest ${
+              stock === 0 ? 'text-red-400' : stockLow ? 'text-amber-400' : 'text-[#7A8290]'
+            }`}>
+              {stock === 1 ? resourceName : resourceNamePlural}
+            </p>
+            {options.logisticGrowth && (
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                stock > initialStock
+                  ? 'bg-red-950 border-red-800 text-red-400'
+                  : stock === initialStock
+                    ? 'bg-[#252830] border-[#4E5564] text-[#7A8290]'
+                    : 'bg-emerald-950 border-emerald-800 text-emerald-400'
+              }`}>
+                {stock > initialStock ? '↑ Over capacity' : stock === initialStock ? 'At capacity' : `↓ ${initialStock - stock} below capacity`}
+              </span>
+            )}
+          </div>
           <StockCards stock={stock} initialStock={initialStock} />
           {stock === 0 && (
             <p className="text-red-400 font-bold text-center mt-3">
@@ -413,13 +457,15 @@ function StockCards({ stock, initialStock }: { stock: number; initialStock: numb
   )
 }
 
-function FlowBox({ label, value, green }: { label: string; value: number; green?: boolean }) {
+function FlowBox({ label, value, green, red }: { label: string; value: number; green?: boolean; red?: boolean }) {
   return (
     <div className={`flex-1 min-w-[80px] text-center p-4 rounded-xl border ${
-      green ? 'bg-emerald-950 border-emerald-800' : 'bg-[#252830] border-[#2E3338]'
+      red   ? 'bg-red-950 border-red-800' :
+      green ? 'bg-emerald-950 border-emerald-800' :
+              'bg-[#252830] border-[#2E3338]'
     }`}>
       <p className="text-sm text-[#4E5564] mb-1">{label}</p>
-      <p className={`text-4xl font-bold ${green ? 'text-emerald-400' : 'text-[#E0DDD0]'}`}>{value}</p>
+      <p className={`text-4xl font-bold ${red ? 'text-red-400' : green ? 'text-emerald-400' : 'text-[#E0DDD0]'}`}>{value}</p>
     </div>
   )
 }
